@@ -133,9 +133,12 @@ async function fetchSearchWeatherInfo(city) {
 
     try {
         // 1st API Call — Get coordinates from city
-        const geoResponse = await fetch(
-            `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${API_KEY}`
+         const geoResponse = await fetch(
+                     `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${API_KEY}`
+          );
+
         );
+     
         const geoData = await geoResponse.json();
         if (!geoData.length) {
             alert("City not found!");
