@@ -1,81 +1,96 @@
-const userTab = document.querySelector("[data-userWeather]"); 
-const searchTab = document.querySelector("[data-searchWeather]");  //data-searchWeather.  this is custom attribute
- const userContainer = document.querySelector(".weather-container");   //.weather-container. this is class
+const userTab = document.querySelector("[data-userWeather]");
+const searchTab = document.querySelector("[data-searchWeather]");
+const userContainer = document.querySelector(".weather-container");
 
 const grantAccessContainer = document.querySelector(".grant-location-container");
 const searchForm = document.querySelector("[data-searchForm]");
 const loadingScreen = document.querySelector(".loading-container");
-const userInfoContainer = document.querySelector(".user-info-container");  
+const userInfoContainer = document.querySelector(".user-info-container");
 
+//initially vairables need????
 
 let oldTab = userTab;
-const API_KEY = "ac98f8f89e437e27501a5090a1f0048a";
+const API_KEY = "d1845658f92b31c64bd94f06f7188c9c";
 oldTab.classList.add("current-tab");
 getfromSessionStorage();
 
-
-
-//loading till we get info
-
 function switchTab(newTab) {
-    if (newTab != oldTab) {
+    if(newTab != oldTab) {
         oldTab.classList.remove("current-tab");
         oldTab = newTab;
         oldTab.classList.add("current-tab");
-//here search form active nhi hai so we have to active search form
-        if (!searchForm.classList.contains("active")) {
+
+        if(!searchForm.classList.contains("active")) {
+            //kya search form wala container is invisible, if yes then make it visible
             userInfoContainer.classList.remove("active");
             grantAccessContainer.classList.remove("active");
             searchForm.classList.add("active");
-        } else {
+        }
+        else {
+            //main pehle search wale tab pr tha, ab your weather tab visible karna h 
             searchForm.classList.remove("active");
             userInfoContainer.classList.remove("active");
-            getfromSessionStorage();    //to get cordinates from local storage
+            //ab main your weather tab me aagya hu, toh weather bhi display karna poadega, so let's check local storage first
+            //for coordinates, if we haved saved them there.
+            getfromSessionStorage();
         }
     }
 }
 
 userTab.addEventListener("click", () => {
+    //pass clicked tab as input paramter
     switchTab(userTab);
 });
 
 searchTab.addEventListener("click", () => {
+    //pass clicked tab as input paramter
     switchTab(searchTab);
 });
 
+//check if cordinates are already present in session storage
 function getfromSessionStorage() {
     const localCoordinates = sessionStorage.getItem("user-coordinates");
-    if (!localCoordinates) {
-        //if local cordinate is not there then fetch from grant location window
+    if(!localCoordinates) {
+        //agar local coordinates nahi mile
         grantAccessContainer.classList.add("active");
-    } else {
-        const coordinates = JSON.parse(localCoordinates);
-        fetchUserWeatherInfo(coordinates);  //function to fetch userweatherinfo based on loacal coordinates
     }
-}
-//fetch ap for user info
-async function fetchUserWeatherInfo(coordinates) {
-    const { lat, lon } = coordinates;
-    grantAccessContainer.classList.remove("active"); //grant permisssion remove
-    loadingScreen.classList.add("active"); //loader visible
+    else {
+        const coordinates = JSON.parse(localCoordinates);
+        fetchUserWeatherInfo(coordinates);
+    }
 
-    try { //api call
+}
+
+async function fetchUserWeatherInfo(coordinates) {
+    const {lat, lon} = coordinates;
+    // make grantcontainer invisible
+    grantAccessContainer.classList.remove("active");
+    //make loader visible
+    loadingScreen.classList.add("active");
+
+    //API CALL
+    try {
         const response = await fetch(
             `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
-        );
-        const data = await response.json();
+          );
+        const  data = await response.json();
 
-        loadingScreen.classList.remove("active"); //loading remove
-        userInfoContainer.classList.add("active"); //userinfo active
-        renderWeatherInfo(data);
-    } catch (err) {
         loadingScreen.classList.remove("active");
-        alert("Failed to fetch weather data.");
+        userInfoContainer.classList.add("active");
+        renderWeatherInfo(data);
     }
+    catch(err) {
+        loadingScreen.classList.remove("active");
+        //HW
+
+    }
+
 }
 
-function renderWeatherInfo(weatherInfo) { //to put data in ui
-    const cityName = document.querySelector("[data-cityName]");   //values which we need to put in website
+function renderWeatherInfo(weatherInfo) {
+    //fistly, we have to fethc the elements 
+
+    const cityName = document.querySelector("[data-cityName]");
     const countryIcon = document.querySelector("[data-countryIcon]");
     const desc = document.querySelector("[data-weatherDesc]");
     const weatherIcon = document.querySelector("[data-weatherIcon]");
@@ -83,9 +98,11 @@ function renderWeatherInfo(weatherInfo) { //to put data in ui
     const windspeed = document.querySelector("[data-windspeed]");
     const humidity = document.querySelector("[data-humidity]");
     const cloudiness = document.querySelector("[data-cloudiness]");
-     
-    //fetch value from weatherinfo object and put in ui
-    cityName.innerText = weatherInfo?.name;  //cityname is directly inside weather info object in json
+
+    console.log(weatherInfo);
+
+    //fetch values from weatherINfo object and put it UI elements
+    cityName.innerText = weatherInfo?.name;
     countryIcon.src = `https://flagcdn.com/144x108/${weatherInfo?.sys?.country.toLowerCase()}.png`;
     desc.innerText = weatherInfo?.weather?.[0]?.description;
     weatherIcon.src = `http://openweathermap.org/img/w/${weatherInfo?.weather?.[0]?.icon}.png`;
@@ -93,72 +110,61 @@ function renderWeatherInfo(weatherInfo) { //to put data in ui
     windspeed.innerText = `${weatherInfo?.wind?.speed} m/s`;
     humidity.innerText = `${weatherInfo?.main?.humidity}%`;
     cloudiness.innerText = `${weatherInfo?.clouds?.all}%`;
+
+
 }
-//function to get current location based on latitude and longitude
+
 function getLocation() {
-    if (navigator.geolocation) {
+    if(navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(showPosition);
-    } else {
-        alert("Geolocation is not supported by this browser.");
+    }
+    else {
+        //HW - show an alert for no gelolocation support available
     }
 }
 
 function showPosition(position) {
+
     const userCoordinates = {
-        lat: position.coords.latitude, //to store current lattitude and longitude cordinates
+        lat: position.coords.latitude,
         lon: position.coords.longitude,
-    };
+    }
+
     sessionStorage.setItem("user-coordinates", JSON.stringify(userCoordinates));
     fetchUserWeatherInfo(userCoordinates);
+
 }
 
-const grantAccessButton = document.querySelector("[data-grantAccess]"); //to create button to call get location after clicking that button
+const grantAccessButton = document.querySelector("[data-grantAccess]");
 grantAccessButton.addEventListener("click", getLocation);
 
 const searchInput = document.querySelector("[data-searchInput]");
+
 searchForm.addEventListener("submit", (e) => {
-    e.preventDefault(); //default mthod ko hata deta hai
+    e.preventDefault();
     let cityName = searchInput.value;
-    if (cityName === "") return;
-    else fetchSearchWeatherInfo(cityName);
-});
 
-
-//search weather api call
+    if(cityName === "")
+        return;
+    else 
+        fetchSearchWeatherInfo(cityName);
+})
 
 async function fetchSearchWeatherInfo(city) {
-    loadingScreen.classList.add("active"); //first need to active loader
+    loadingScreen.classList.add("active");
     userInfoContainer.classList.remove("active");
     grantAccessContainer.classList.remove("active");
 
     try {
-        // 1st API Call — Get coordinates from city
-         const geoResponse = await fetch(
-                     `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${API_KEY}`
+        const response = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
           );
-
-        );
-     
-        const geoData = await geoResponse.json();
-        if (!geoData.length) {
-            alert("City not found!");
-            loadingScreen.classList.remove("active");
-            return;
-        }
-
-        const { lat, lon } = geoData[0];
-
-        // 2nd API Call — Get weather using coordinates
-        const weatherResponse = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
-        );
-        const weatherData = await weatherResponse.json();
-
+        const data = await response.json();
         loadingScreen.classList.remove("active");
         userInfoContainer.classList.add("active");
-        renderWeatherInfo(weatherData);
-    } catch (err) {
-        loadingScreen.classList.remove("active");
-        alert("Error fetching weather data.");
+        renderWeatherInfo(data);
+    }
+    catch(err) {
+        //hW
     }
 }
