@@ -129,4 +129,6 @@ h1 {
   width: 40px;
   height: 40px;
 }
-
+.word1 {
+  margin-right: 15px; /* adjust as needed */
+}
